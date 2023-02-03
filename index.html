@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1 style="text-align: center; font-size: 60px">Vente 2022</h1>
+    <div id="graphContainer"></div>
+  </body>
+
+  <script defer>
+    const svgns = "http://www.w3.org/2000/svg";
+    let viewPortMaxUnitX = 1000;
+    let viewPortMaxUnitY = 1000;
+    let viewport = null;
+    let x1 = 150,
+      y1 = 50,
+      x2 = 850,
+      y2 = 50;
+    let mois = [
+      "janvier",
+      "février",
+      "mars",
+      "avril",
+      "mai",
+      "juin",
+      "juillet",
+      "août",
+      "septembre",
+      "octobre",
+      "novembre",
+      "décembre",
+    ];
+    let ventes = [
+      6500, 5550, 4200, 4525, 2500, 1500, 500, 1000, 1750, 2300, 3700, 3500,
+    ];
+
+    init_UI();
+    function init_UI() {
+      insertViewPort("graphContainer");
+      buildGraph();
+    }
+
+    function determineMaxUnit() {
+      let maxValue = Math.max(...ventes);
+      let arrayStringValue = maxValue.toString().split("");
+      console.log(arrayStringValue);
+      if (!("." in arrayStringValue)) {
+        arrayStringValue[0] = (parseInt(arrayStringValue[0]) + 1).toString();
+        for (let index = arrayStringValue.length - 1; index > 0; index--) {
+          arrayStringValue[index] = "0";
+        }
+        console.log(arrayStringValue);
+      }
+
+      return (
+        Math.pow(10, parseInt(arrayStringValue.length) - 1) *
+        parseInt(arrayStringValue.join())
+      );
+    }
+    function divisionEnTrancheDe(x) {
+      return determineMaxUnit() / x;
+    }
+
+    function insertViewPort(containerId) {
+      viewport = document.createElementNS(svgns, "svg");
+      viewport.setAttribute("id", "viewport");
+      viewport.setAttribute(
+        "viewBox",
+        "-10 0 " + viewPortMaxUnitX + " " + viewPortMaxUnitY
+      );
+      document.getElementById(containerId).appendChild(viewport);
+    }
+
+    function calculOffset(x) {
+      return (x2 - x1) / (x + 1);
+    }
+
+    function buildGraph() {
+      let trancheDeDonnéeEnX = divisionEnTrancheDe(10);
+      let offsetBackLines = 5;
+      let offsetMonths = calculOffset(mois.length);
+
+      for (let index = 70; index >= 0; index--) {
+        if (index % 10 == 0) {
+          if ((index / 10) * 1000 == 0) {
+            viewport.appendChild(
+              text(125, y1 + 5, "$ " + ((index / 10) * 1000).toString())
+            );
+          } else {
+            viewport.appendChild(
+              text(100, y1 + 5, "$ " + ((index / 10) * 1000).toString())
+            );
+          }
+
+          viewport.appendChild(line(x1, y1, x2, y2, "black", 1));
+        } else viewport.appendChild(line(x1, y1, x2, y2, "black", 0.1));
+        y1 += offsetBackLines;
+        y2 += offsetBackLines;
+      }
+
+      x2 = x1;
+      for (let index = 0; index < mois.length; index++) {
+        let couleur = "green";
+        if (ventes[index] <= 1000) {
+          couleur = "red";
+        } else if (ventes[index] <= 3000) {
+          couleur = "orange";
+        } else if (ventes[index] <= 4500) {
+          couleur = "yellow";
+        }
+        x2 += offsetMonths;
+        let value = (346 * ventes[index]) / 7000;
+        viewport.appendChild(text((x1 += offsetMonths), 425, mois[index], 45));
+        viewport.appendChild(line(x1, y1 - 5, x2, 400 - value, "black", 41));
+        viewport.appendChild(line(x1, y1 - 5, x2, 401 - value, couleur, 40));
+      }
+      /*viewport.appendChild(line(150, 50, 850, 50, "black", 1));
+      viewport.appendChild(line(60, 0, 60, 200, "black", 0.1));
+      viewport.appendChild(line(20, 0, 20, 200, "blue", 15));
+      viewport.appendChild(line(0, 0, 0, 200, "orange", 15));*/
+      /*viewport.appendChild(rect(500, 20, 300, 200, "orange", "yellow", 15));
+      viewport.appendChild(rect(500, 300, 300, 200, "magenta", "cyan", 15));
+      let gray;
+      for (let angle = 360; angle >= 0; angle -= 15) {
+        gray = (angle / 360) * 255;
+        viewport.appendChild(
+          text(220, 400, "Bonjour", angle, 4, `rgb(${gray}, ${gray}, ${gray})`)
+        );
+      }*/
+    }
+    function line(x1, y1, x2, y2, stroke = "black", strokeWidth = 1) {
+      let line = document.createElementNS(svgns, "line");
+      line.setAttribute("x1", x1);
+      line.setAttribute("y1", y1);
+      line.setAttribute("x2", x2);
+      line.setAttribute("y2", y2);
+      line.setAttribute("stroke", stroke);
+      line.setAttribute("stroke-width", strokeWidth);
+      return line;
+    }
+    function rect(
+      x,
+      y,
+      width,
+      height,
+      fill = "white",
+      stroke = "black",
+      strokeWidth = 1
+    ) {
+      let rect = document.createElementNS(svgns, "rect");
+      rect.setAttribute("x", x);
+      rect.setAttribute("y", y);
+      rect.setAttribute("width", width);
+      rect.setAttribute("height", height);
+      rect.setAttribute("fill", fill);
+      rect.setAttribute("stroke", stroke);
+      rect.setAttribute("stroke-width", strokeWidth);
+      return rect;
+    }
+    function text(x, y, content, angle = 0, size = "1", fill = "black") {
+      let text = document.createElementNS(svgns, "text");
+      text.setAttribute("x", x);
+      text.setAttribute("y", y);
+      text.setAttribute("transform", `rotate(${angle},${x},${y})`);
+      text.setAttribute("font-size", size + "em");
+      text.setAttribute("fill", fill);
+      text.innerHTML = content;
+      return text;
+    }
+  </script>
+</html>
